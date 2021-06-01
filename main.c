@@ -15,9 +15,17 @@ void menuProveedor();
 void agregarProducto();
 void cambiarClave();
 void cambiarNombre();
+void crearCuenta();
+void msgNoIniciado();
+void msgActualmenteIniciado();
+void msgNoExisteUsuario();
+int existeUsu(char [100]);
+int codigoValido(char [100],char [100]);
+void msgContraErronea();
 
 WINDOW *mframe;
-int y_max,x_max;
+int y_max,x_max, sesion = 0;
+char usuActual[100];
 //Nota: crear variables compartidas para hacer uso de semaforos
 
 //Checar funciones
@@ -123,46 +131,52 @@ int main(){
 
 
 void carrito(){
-    char usuario[100];
-    int tecla;
-    strcpy(usuario,"Persona x");
+    if(sesion == 1){
+        char usuario[100];
+        int tecla;
+        strcpy(usuario,usuActual);
 
-    while(tecla != KEY_LEFT){
-        wclear(mframe);
-        wrefresh(mframe);
-        box(mframe,0,0); //Margen
-        
+        while(tecla != KEY_LEFT){
+            wclear(mframe);
+            wrefresh(mframe);
+            box(mframe,0,0); //Margen
+            
 
-        wattron(mframe, A_REVERSE);
-        mvwprintw(mframe,2,2,"CARRITO", usuario);
-        wattroff(mframe, A_REVERSE);
-        wrefresh(mframe);
-
-        mvwprintw(mframe,4,3,"Hola usuario %s", usuario);
-        mvwprintw(mframe,y_max-4,4,"<- para regresar ||  -> para pagar", usuario);
-        mvwprintw(mframe,9,3,"Articulos en el carrito:");
-        //Buscar al usuario e imprimir su txt insertar aqui funcion
-
-        wrefresh(mframe);
-        tecla = wgetch(mframe);
-
-        if(tecla == KEY_LEFT){
-            return;
-        }
-        else if(tecla == KEY_RIGHT){
-            wmove(mframe,7,2);
             wattron(mframe, A_REVERSE);
-            mvwprintw(mframe, 7, 2, "ya esta todo pagadisimo :D          <- Menu || Seguir en carrito ->");
+            mvwprintw(mframe,2,2,"CARRITO", usuario);
             wattroff(mframe, A_REVERSE);
             wrefresh(mframe);
-            wgetch(mframe);
-        }
 
+            mvwprintw(mframe,4,3,"Hola %s", usuario);
+            mvwprintw(mframe,y_max-4,4,"<- para regresar ||  -> para pagar", usuario);
+            mvwprintw(mframe,9,3,"Articulos en el carrito:");
+            //Buscar al usuario e imprimir su txt insertar aqui funcion
+
+            wrefresh(mframe);
+            tecla = wgetch(mframe);
+
+            if(tecla == KEY_LEFT){
+                return;
+            }
+            else if(tecla == KEY_RIGHT){
+                wmove(mframe,7,2);
+                wattron(mframe, A_REVERSE);
+                mvwprintw(mframe, 7, 2, "ya esta todo pagadisimo :D          <- Menu || Seguir en carrito ->");
+                wattroff(mframe, A_REVERSE);
+                wrefresh(mframe);
+                wgetch(mframe);
+            }
+
+        }
+        
+        wrefresh(mframe);
     }
-    
-    wrefresh(mframe);
+    else{
+        msgNoIniciado();
+    }
     return;
 }
+
 
 //Insertar opcion que pueda hacer dispplay de la info de todos los productos
 void catalogo(){
@@ -195,12 +209,13 @@ void catalogo(){
 
 void cuenta(){
     int opcion = 0, registrado = 0, pos = 0;
-    char menu[4][100];
+    char menu[6][100];
 
     strcpy(menu[0], "Iniciar sesion");
     strcpy(menu[1], "Soy proveedor");
     strcpy(menu[2], "Cerrar sesion");
     strcpy(menu[3], "Detalles de usuario");
+    strcpy(menu[4], "Crear Usuario");
 
     while(opcion != KEY_LEFT){
         wclear(mframe);
@@ -213,7 +228,7 @@ void cuenta(){
         mvwprintw(mframe,4,30,"<- para regresar ||  -> para confirmar"); //aun no funciona confirmar
         mvwprintw(mframe,3,30,"arriba / abajo para desplazar");
 
-        for(int i = 0; i<4 ;i++){
+        for(int i = 0; i<6 ;i++){
 
             if(i == pos){
               wattron(mframe, A_REVERSE);
@@ -232,7 +247,7 @@ void cuenta(){
                 pos-=1;
         }
         else if(opcion == KEY_DOWN){
-            if(pos <= 2)
+            if(pos <= 3)
                 pos+=1;
         }
 
@@ -245,6 +260,9 @@ void cuenta(){
         else if (opcion == KEY_RIGHT && pos == 3)
         {
             detallesCuenta(); 
+        }else if (opcion == KEY_RIGHT && pos == 4)
+        {
+            crearCuenta(); 
         }
         
 
@@ -258,6 +276,46 @@ void cuenta(){
     return;
 }
 
+void crearCuenta(){
+    char nombre[100], clave[100];
+    echo();
+    wclear(mframe);
+    box(mframe,0,0);
+    box(mframe,0,0); //Margen
+
+    //if (No se ha iniciado sesion)
+    mvwprintw(mframe,2,2,"Introduzca un nombre de usuario: ");
+    wmove(mframe,2,40);
+    wrefresh(mframe);
+    wscanw(mframe,"%s",&nombre);
+
+    noecho();
+    mvwprintw(mframe,3,2,"Introduzca una clave: ");
+    wmove(mframe,3,40);
+    wrefresh(mframe);
+    wscanw(mframe,"%s",&clave);
+
+    
+    wattron(mframe,A_REVERSE);
+    mvwprintw(mframe,8,x_max/2-10,"Usuario creado correctamente, Hola %s", nombre);
+    wrefresh(mframe);
+    wgetch(mframe);
+    wattroff(mframe,A_REVERSE);
+    noecho();
+    wrefresh(mframe);
+    
+    //else mvwprintw(mframe,8,x_max/2-10,"Usuario/Contraseña incorrectos");
+
+
+    //Creando txt con todos los datos del usuario
+    FILE * usuario;
+    usuario = fopen(nombre,"a+");
+    fprintf(usuario,"%s ",nombre);
+    fprintf(usuario,"%s \n",clave);
+    fclose(usuario);
+    return;
+}
+
 void imprimeTxt(){
     
 
@@ -265,38 +323,49 @@ void imprimeTxt(){
 }
 
 void iniciarSesion(){
-    echo();
-    int opcion = 0;
-    char usuario[100], contras[100];
-    wclear(mframe);
-    box(mframe,0,0);
-    box(mframe,0,0); //Margen
-    curs_set(1);
+    if(sesion == 0){
+        echo();
+        int opcion = 0;
+        char usuario[100], contras[100];
+        wclear(mframe);
+        box(mframe,0,0);
+        box(mframe,0,0); //Margen
+        curs_set(1);
 
-    //if (No se ha iniciado sesion)
-    mvwprintw(mframe,2,2,"Bienvenido");
-    mvwprintw(mframe,4,2,"Introduzca su usuario: ");
-    wmove(mframe,4,25);
-    wrefresh(mframe);
-    wscanw(mframe,"%s",&usuario);
+        //if (No se ha iniciado sesion)
+        mvwprintw(mframe,2,2,"Bienvenido");
+        mvwprintw(mframe,4,2,"Introduzca su usuario: ");
+        wmove(mframe,4,25);
+        wrefresh(mframe);
+        wscanw(mframe,"%s",&usuario);
 
-    noecho();
-    mvwprintw(mframe,6,2,"Introduzca su clave: ");
-    wmove(mframe,6,25);
-    wrefresh(mframe);
-    wscanw(mframe,"%s",&contras);
+        noecho();
+        mvwprintw(mframe,6,2,"Introduzca su clave: ");
+        wmove(mframe,6,25);
+        wrefresh(mframe);
+        wscanw(mframe,"%s",&contras);
 
-    //funcion chequeo de sesion
-    //if(existe usuario y constraseña)
-    wattron(mframe,A_REVERSE);
-    mvwprintw(mframe,8,x_max/2-10,"Sesion iniciada correctamente, Hola X");
-    wrefresh(mframe);
-    wgetch(mframe);
-    wattroff(mframe,A_REVERSE);
-    curs_set(0);
-    wrefresh(mframe);
-    
-    //else mvwprintw(mframe,8,x_max/2-10,"Usuario/Contraseña incorrectos");
+        //funcion chequeo de sesion
+        //if(existe usuario y constraseña
+        if(existeUsu(usuario) == 1 && codigoValido(usuario,contras) == 1){
+            wattron(mframe,A_REVERSE);
+            mvwprintw(mframe,8,x_max/2-10,"Sesion iniciada correctamente, Hola %s", usuario);
+            wrefresh(mframe);
+            wgetch(mframe);
+            wattroff(mframe,A_REVERSE);
+            curs_set(0);
+            wrefresh(mframe);
+            strcpy(usuActual,usuario);
+            sesion = 1;
+        }  
+        else{
+            msgContraErronea();
+        }
+        //else mvwprintw(mframe,8,x_max/2-10,"Usuario/Contraseña incorrectos");
+    }
+    else{
+        msgActualmenteIniciado();
+    }
 
     return;
 }
@@ -439,6 +508,7 @@ void cerrarSesion(){
     wgetch(mframe);//Paro para ver que funcione todo
     wattroff(mframe,A_REVERSE);
     wrefresh(mframe);
+    sesion = 0;
     return;
 }
 
@@ -490,10 +560,9 @@ void detallesCuenta(){
 
         if(opcion == KEY_RIGHT && pos == 0)
             cambiarNombre();
-        else if(opcion == KEY_RIGHT && pos == 0)
+        else if(opcion == KEY_RIGHT && pos == 1)
             cambiarClave();
-        else if(opcion == KEY_RIGHT && pos == 1){
-            cerrarSesion();
+        else if(opcion == KEY_LEFT){
             return;
         }
     }
@@ -502,7 +571,7 @@ void detallesCuenta(){
 
 void cambiarNombre(){
     echo();
-    char nombre[100];
+    char nombre[100], clave[100];
     //Ventana temporal
     wclear(mframe);
     box(mframe,0,0); //Margen
@@ -512,21 +581,43 @@ void cambiarNombre(){
     wrefresh(mframe);
     wscanw(mframe,"%s",&nombre);
 
+    mvwprintw(mframe,3,2,"Confirme con su clave:");
+    wmove(mframe,3,40);
+    wrefresh(mframe);
+    wscanw(mframe,"%s",&clave);
+
     wmove(mframe,5,2);
     wattron(mframe,A_REVERSE);
     wrefresh(mframe);
-    mvwprintw(mframe,5,2,"Nombre modificado con exito");
-    wgetch(mframe);
 
+    if(codigoValido(usuActual,clave)){
+        FILE * usuario;
+        usuario = fopen(nombre,"w");
+        fprintf(usuario,"%s %s",nombre, clave);
+        mvwprintw(mframe,5,2,"Nombre modificado con exito");
+        rename(usuActual, nombre);
+        wgetch(mframe);
+        strcpy(usuActual,nombre); 
+        fclose(usuario);
+    }
+    else{
+        mvwprintw(mframe,5,2,"Clave no valida");
+        wgetch(mframe);
+    }
+
+
+
+    
     noecho();
     wattroff(mframe,A_REVERSE);
     wrefresh(mframe);
+
     return;
 }
 
 void cambiarClave(){
     echo();
-    char clave[100];
+    char nclave[100], clave[100];
     //Ventana temporal
     wclear(mframe);
     box(mframe,0,0); //Margen
@@ -534,18 +625,112 @@ void cambiarClave(){
     mvwprintw(mframe,2,2,"Introduzca su nueva clave:");
     wmove(mframe,2,40);
     wrefresh(mframe);
+    wscanw(mframe,"%s",&nclave);
+
+    noecho();
+    wclear(mframe);
+    box(mframe,0,0); //Margen
+    mvwprintw(mframe,2,2,"Introduzca su clave actual:");
+    wmove(mframe,2,40);
+    wrefresh(mframe);
     wscanw(mframe,"%s",&clave);
 
-    wmove(mframe,5,2);
-    wattron(mframe,A_REVERSE);
-    wrefresh(mframe);
-    mvwprintw(mframe,5,2,"Clave modificada con exito");
-    wgetch(mframe);
+
+    if(codigoValido(usuActual,clave)){
+        FILE * usuario;
+        usuario = fopen(usuActual,"w");
+        fprintf(usuario,"%s %s",usuActual, nclave);
+        mvwprintw(mframe,5,2,"Clave modificada con exito");
+        wgetch(mframe); 
+        fclose(usuario);
+    }
+    else{
+        mvwprintw(mframe,5,2,"Clave no valida");
+        wgetch(mframe);
+    }
+    
 
     noecho();
     wattroff(mframe,A_REVERSE);
     wrefresh(mframe);
     return;
+}
+
+void msgNoIniciado(){
+            wclear(mframe);
+            wrefresh(mframe);
+            box(mframe,0,0); //Margen
+        
+            wattron(mframe, A_REVERSE);
+            mvwprintw(mframe,2,2,"NO HAY SESION EXISTENTE");
+            wattroff(mframe, A_REVERSE);
+            wrefresh(mframe);
+            wgetch(mframe);
+            return;
+}
+
+void msgContraErronea(){
+            wclear(mframe);
+            wrefresh(mframe);
+            box(mframe,0,0); //Margen
+        
+            wattron(mframe, A_REVERSE);
+            mvwprintw(mframe,2,2,"Clave/Usuario no valido");
+            wattroff(mframe, A_REVERSE);
+            wrefresh(mframe);
+            wgetch(mframe);
+            return;
+}
+
+void msgActualmenteIniciado(){
+            wclear(mframe);
+            wrefresh(mframe);
+            box(mframe,0,0); //Margen
+        
+            wattron(mframe, A_REVERSE);
+            mvwprintw(mframe,2,2,"NO PUEDE INICIAR SESION SI NO HA CERRADO LA EXISTENTE");
+            wattroff(mframe, A_REVERSE);
+            wrefresh(mframe);
+            wgetch(mframe);
+            return;
+}
+
+
+int existeUsu(char nombre[100]){
+    FILE * usuario;
+    if(usuario = fopen(nombre,"r")){
+        fclose(usuario);
+        return 1;
+    }
+    else{
+        return 0;
+    }
+}
+
+void msgNoExisteUsuario(){
+            wclear(mframe);
+            wrefresh(mframe);
+            box(mframe,0,0); //Margen
+        
+            wattron(mframe, A_REVERSE);
+            mvwprintw(mframe,2,2,"EL USUARIO QUE HA BUSCADO NO EXISTE");
+            wattroff(mframe, A_REVERSE);
+            wrefresh(mframe);
+            wgetch(mframe);
+            return;
+}
+
+int codigoValido(char nombre[100],char codigo[100]){
+    char aux[100],aux2[100];
+    FILE * usuario;
+    usuario = fopen(nombre,"r");
+    fscanf(usuario,"%s %s",aux,aux2);
+
+    if(strcmp(codigo,aux2) == 0){
+        return 1;
+    }
+    else
+        return 0;
 }
 
 
