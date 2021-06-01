@@ -16,7 +16,6 @@ void agregarProducto();
 void cambiarClave();
 void cambiarNombre();
 
-
 WINDOW *mframe;
 int y_max,x_max;
 //Nota: crear variables compartidas para hacer uso de semaforos
