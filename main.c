@@ -20,7 +20,7 @@ WINDOW *mframe;
 int y_max,x_max;
 //Nota: crear variables compartidas para hacer uso de semaforos
 
-
+//Checar funciones
 //Main con menú principal
 int main(){
     initscr();
