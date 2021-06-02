@@ -513,59 +513,63 @@ void cerrarSesion(){
 }
 
 void detallesCuenta(){
-    int opcion,pos = 0;
-    char menu[2][100];
+    if(sesion == 1){
+        int opcion,pos = 0;
+        char menu[2][100];
 
-    strcpy(menu[0], "Cambiar Usuario");
-    strcpy(menu[1], "Cambiar Clave");
+        strcpy(menu[0], "Cambiar Usuario");
+        strcpy(menu[1], "Cambiar Clave");
 
-    wclear(mframe);
-    box(mframe,0,0); //Margen
-
-    mvwprintw(mframe,2,2,"");
-    wmove(mframe,4,35);
-    wrefresh(mframe);
-
-    while(1){
         wclear(mframe);
-        wrefresh(mframe);
         box(mframe,0,0); //Margen
-        
-        wmove(mframe,2,2);
-        mvwprintw(mframe, 2,2,"Tecla --> para confirmar");
-        mvwprintw(mframe, 3,2,"Tecla <-- para regresar");
-       
-        for(int i = 0; i<2 ;i++){
 
-            if(i == pos){
-              wattron(mframe, A_REVERSE);
-            }
-            mvwprintw(mframe, 5+i, 2, menu[i]);
-            wattroff(mframe, A_REVERSE);
+        mvwprintw(mframe,2,2,"");
+        wmove(mframe,4,35);
+        wrefresh(mframe);
+
+        while(1){
+            wclear(mframe);
             wrefresh(mframe);
-        }
+            box(mframe,0,0); //Margen
+            
+            wmove(mframe,2,2);
+            mvwprintw(mframe, 2,2,"Tecla --> para confirmar");
+            mvwprintw(mframe, 3,2,"Tecla <-- para regresar");
+        
+            for(int i = 0; i<2 ;i++){
 
-        opcion = wgetch(mframe);
+                if(i == pos){
+                wattron(mframe, A_REVERSE);
+                }
+                mvwprintw(mframe, 5+i, 2, menu[i]);
+                wattroff(mframe, A_REVERSE);
+                wrefresh(mframe);
+            }
 
-        if(opcion == KEY_LEFT)
-            return;
-        else if(opcion == KEY_UP){
-            if(pos > 0)
-                pos-=1;
-        }
-        else if(opcion == KEY_DOWN){
-            if(pos <= 2)
-                pos+=1;
-        }
+            opcion = wgetch(mframe);
 
-        if(opcion == KEY_RIGHT && pos == 0)
-            cambiarNombre();
-        else if(opcion == KEY_RIGHT && pos == 1)
-            cambiarClave();
-        else if(opcion == KEY_LEFT){
-            return;
+            if(opcion == KEY_LEFT)
+                return;
+            else if(opcion == KEY_UP){
+                if(pos > 0)
+                    pos-=1;
+            }
+            else if(opcion == KEY_DOWN){
+                if(pos <= 2)
+                    pos+=1;
+            }
+
+            if(opcion == KEY_RIGHT && pos == 0)
+                cambiarNombre();
+            else if(opcion == KEY_RIGHT && pos == 1)
+                cambiarClave();
+            else if(opcion == KEY_LEFT){
+                return;
+            }
         }
     }
+    else
+        msgNoIniciado();
     return;
 }
 
@@ -581,6 +585,7 @@ void cambiarNombre(){
     wrefresh(mframe);
     wscanw(mframe,"%s",&nombre);
 
+    noecho();
     mvwprintw(mframe,3,2,"Confirme con su clave:");
     wmove(mframe,3,40);
     wrefresh(mframe);
@@ -616,7 +621,7 @@ void cambiarNombre(){
 }
 
 void cambiarClave(){
-    echo();
+    noecho();
     char nclave[100], clave[100];
     //Ventana temporal
     wclear(mframe);
@@ -627,7 +632,7 @@ void cambiarClave(){
     wrefresh(mframe);
     wscanw(mframe,"%s",&nclave);
 
-    noecho();
+
     wclear(mframe);
     box(mframe,0,0); //Margen
     mvwprintw(mframe,2,2,"Introduzca su clave actual:");
@@ -649,8 +654,6 @@ void cambiarClave(){
         wgetch(mframe);
     }
     
-
-    noecho();
     wattroff(mframe,A_REVERSE);
     wrefresh(mframe);
     return;
@@ -732,8 +735,3 @@ int codigoValido(char nombre[100],char codigo[100]){
     else
         return 0;
 }
-
-
-
-
-
