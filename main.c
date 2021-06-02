@@ -6,7 +6,6 @@ void cuenta();
 void catalogo();
 void carrito();
 void imprimeTxt();
-void imprimeTxt();
 void iniciarSesion();
 void soyProveedor();
 void cerrarSesion();
@@ -22,6 +21,12 @@ void msgNoExisteUsuario();
 int existeUsu(char [100]);
 int codigoValido(char [100],char [100]);
 void msgContraErronea();
+void agregarCatalogo(char [100],char [100],int);
+void eliminarCatalogo(char [100],char [100]);
+void eliminarProducto();
+int estaEnTxt(char [100], char [100]);
+
+
 
 WINDOW *mframe;
 int y_max,x_max, sesion = 0;
@@ -147,9 +152,9 @@ void carrito(){
             wattroff(mframe, A_REVERSE);
             wrefresh(mframe);
 
-            mvwprintw(mframe,4,3,"Hola %s", usuario);
+            mvwprintw(mframe,2,20,"Hola %s", usuario);
             mvwprintw(mframe,y_max-4,4,"<- para regresar ||  -> para pagar", usuario);
-            mvwprintw(mframe,9,3,"Articulos en el carrito:");
+            mvwprintw(mframe,4,2,"Articulos en el carrito:");
             //Buscar al usuario e imprimir su txt insertar aqui funcion
 
             wrefresh(mframe);
@@ -180,7 +185,7 @@ void carrito(){
 
 //Insertar opcion que pueda hacer dispplay de la info de todos los productos
 void catalogo(){
-    int opcion;
+    int opcion,producto;
 
     while(opcion != KEY_LEFT){
         wclear(mframe);
@@ -191,17 +196,33 @@ void catalogo(){
         wattroff(mframe, A_REVERSE);
 
         mvwprintw(mframe,4,2,"<- para regresar ||  -> para agregar a carrito");
-        mvwprintw(mframe, 6, 2, "Nombre             Proveedor               Precio");
+        mvwprintw(mframe, 6, 2, "Num     Nombre             Proveedor               Precio");
         // funcion de impresion de datos imprimeTxt();
+        imprimeTxt();
         wrefresh(mframe);
 
         opcion = wgetch(mframe);
         
         if(opcion == KEY_LEFT)
             return;
-        else if(opcion == KEY_RIGHT)
-            mvwprintw(mframe, 2, 35, "Producto agregado con exito");
-    
+        else if(opcion == KEY_RIGHT){
+            if(sesion == 1){
+                mvwprintw(mframe, 2, 35, "Introduzca el numero de producto:");
+                wrefresh(mframe);
+                wmove(mframe,2,50);
+                wscanw(mframe,"%d",&producto);
+
+                mvwprintw(mframe, 3, 35, "Producto agregado con exito");
+                wrefresh(mframe);
+            }
+            else{
+                wclear(mframe);
+                box(mframe,0,0);
+                mvwprintw(mframe, 2, 2, "Para agregar productos al carrito inicie sesion");
+                wgetch(mframe);
+            }
+
+        }
         wgetch(mframe);  
     }
 
@@ -295,9 +316,21 @@ void crearCuenta(){
     wrefresh(mframe);
     wscanw(mframe,"%s",&clave);
 
+    //Creando txt con todos los datos del usuario
     
+    FILE * usuario;
+    usuario = fopen(nombre,"w");
+    fprintf(usuario,"%s ",nombre);
+    fprintf(usuario,"%s \n",clave);
+    fclose(usuario);
+
+    FILE * carrito;
+    strcat(nombre,"_carrito");
+    carrito = fopen(nombre,"w");
+    fclose(carrito);
+
     wattron(mframe,A_REVERSE);
-    mvwprintw(mframe,8,x_max/2-10,"Usuario creado correctamente, Hola %s", nombre);
+    mvwprintw(mframe,8,x_max/2-20,"Usuario creado correctamente, Hola %s", nombre);
     wrefresh(mframe);
     wgetch(mframe);
     wattroff(mframe,A_REVERSE);
@@ -306,19 +339,29 @@ void crearCuenta(){
     
     //else mvwprintw(mframe,8,x_max/2-10,"Usuario/Contraseña incorrectos");
 
-
-    //Creando txt con todos los datos del usuario
-    FILE * usuario;
-    usuario = fopen(nombre,"a+");
-    fprintf(usuario,"%s ",nombre);
-    fprintf(usuario,"%s \n",clave);
-    fclose(usuario);
     return;
 }
 
 void imprimeTxt(){
+    FILE *txt;
+    char nombre[100],proveedor[100],precio[100];
+    int i = 0, j = 0, total = 8;
+    txt = fopen("catalogo", "r");
     
+    while(fscanf(txt,"%s",nombre) != EOF){
 
+        fscanf(txt,"%s",proveedor);
+        fscanf(txt,"%s",precio);
+
+        mvwprintw(mframe, total,2,"%d    %s",i,nombre);
+        mvwprintw(mframe, total,30,"%s",proveedor);
+        mvwprintw(mframe, total,55,"%s",precio);
+        wrefresh(mframe);
+        
+        i+=1;
+        total+=1;
+    }
+    fclose(txt);
     return;
 }
 
@@ -381,28 +424,23 @@ void soyProveedor(){
 
     //if (no se ha iniciado sesion)
     mvwprintw(mframe,2,2,"Bienvenido");
-    mvwprintw(mframe,4,2,"Introduzca su usuario de proveedor: ");
-    wmove(mframe,4,40);
-    wrefresh(mframe);
-    wscanw(mframe,"%s",&usuario);
-
-    noecho();
-    mvwprintw(mframe,6,2,"Introduzca su clave: ");
-    wmove(mframe,6,40);
-    wrefresh(mframe);
-    wscanw(mframe,"%s",&contras);
+    iniciarSesion();
 
     //funcion chequeo de sesion
     //if(existe usuario y constraseña)
-    wattron(mframe,A_REVERSE);
-    mvwprintw(mframe,8,x_max/2-10,"Sesion iniciada correctamente, Hola X");
-    wrefresh(mframe);
-    wgetch(mframe);
-    wattroff(mframe,A_REVERSE);
+    if(strcmp(usuActual,"") != 0){
+        wattron(mframe,A_REVERSE);
+        mvwprintw(mframe,8,x_max/2-10,"Sesion iniciada correctamente, Hola %s", usuActual);
+        wrefresh(mframe);
+        wattroff(mframe,A_REVERSE);
+        curs_set(0);
+        wrefresh(mframe);
+        menuProveedor();
+    }
     curs_set(0);
     wrefresh(mframe);
 
-    menuProveedor();
+    
     
     //else mvwprintw(mframe,8,x_max/2-10,"Usuario/Contraseña incorrectos");
     return;
@@ -410,10 +448,13 @@ void soyProveedor(){
 
 void menuProveedor(){
     int opcion,pos = 0;
-    char menu[2][100];
+    char menu[6][100];
 
-    strcpy(menu[0], "Agregar Productos");
-    strcpy(menu[1], "Cerrar Sesion");
+    strcpy(menu[0], "Agregar Producto");
+    strcpy(menu[1], "Eliminar Producto");
+    strcpy(menu[2], "Cerrar Sesion");
+    strcpy(menu[3], "Cambiar Nombre");
+    strcpy(menu[4], "Cambiar Clave");
 
     wclear(mframe);
     box(mframe,0,0); //Margen
@@ -431,7 +472,7 @@ void menuProveedor(){
         mvwprintw(mframe, 2,2,"Tecla --> para confirmar");
         mvwprintw(mframe, 3,2,"Tecla <-- para regresar");
        
-        for(int i = 0; i<2 ;i++){
+        for(int i = 0; i<4 ;i++){
 
             if(i == pos){
               wattron(mframe, A_REVERSE);
@@ -457,18 +498,24 @@ void menuProveedor(){
         if(opcion == KEY_RIGHT && pos == 0)
             agregarProducto();
         else if(opcion == KEY_RIGHT && pos == 1){
-            cerrarSesion();
+            eliminarProducto();
             return;
         }
+        else if(opcion == KEY_RIGHT && pos == 2){
+            cerrarSesion();
+            return;
+        }else if(opcion == KEY_RIGHT && pos == 3){
+            cambiarNombre();
+        }else if(opcion == KEY_RIGHT && pos == 4){
+            cambiarClave();
+        }
     }
-    
-
 }
 
 void agregarProducto(){
     echo();
+    char nombreProd[100];
     int opciones = 0, precio = 0;
-    char producto[100];
     //Ventana temporal
     wclear(mframe);
     box(mframe,0,0); //Margen
@@ -476,7 +523,7 @@ void agregarProducto(){
     mvwprintw(mframe,2,2,"Introduzca el nombre del producto:");
     wmove(mframe,2,40);
     wrefresh(mframe);
-    wscanw(mframe,"%s",&producto);
+    wscanw(mframe,"%s",nombreProd);
 
     mvwprintw(mframe,3,2,"Introduzca el precio del producto:");
     wmove(mframe,3,40);
@@ -486,12 +533,87 @@ void agregarProducto(){
     wmove(mframe,5,2);
     wattron(mframe,A_REVERSE);
     wrefresh(mframe);
+    //Agregra producto en txt llamado catalogo con el siguiente formato nombre, proveedor, precio
+    agregarCatalogo(nombreProd,usuActual,precio);
     mvwprintw(mframe,5,2,"Producto Agregado con Exito");
     wgetch(mframe);
 
     noecho();
     wattroff(mframe,A_REVERSE);
     wrefresh(mframe);
+    return;
+}
+
+void agregarCatalogo(char nombreProd[100],char usuario[100],int precio){
+    FILE * txtCatalogo;
+    txtCatalogo = fopen("catalogo","a+");
+
+    
+    mvwprintw(mframe,7,(x_max/2)-6,"%s  %s  %d", nombreProd, usuario, precio);
+    refresh();
+    fprintf(txtCatalogo,"%s ",nombreProd);
+    fprintf(txtCatalogo,"%s ",usuario);
+    fprintf(txtCatalogo,"%d ",precio);
+    fclose(txtCatalogo);
+    return;
+}
+
+void eliminarProducto(){
+    echo();
+    char nombreProd[100];
+    int opciones = 0, precio = 0;
+    //Ventana temporal
+    wclear(mframe);
+    box(mframe,0,0); //Margen
+
+    mvwprintw(mframe,2,2,"Introduzca el nombre del producto:");
+    wmove(mframe,2,40);
+    wrefresh(mframe);
+    wscanw(mframe,"%s",nombreProd);
+
+    wmove(mframe,5,2);
+    wattron(mframe,A_REVERSE);
+    wrefresh(mframe);
+    //Agregra producto en txt llamado catalogo con el siguiente formato nombre, proveedor, precio
+    
+    if(estaEnTxt("catalogo",nombreProd)){
+        eliminarCatalogo(nombreProd,usuActual);
+        mvwprintw(mframe,5,2,"Producto eliminado con Exito");
+        wgetch(mframe);
+    }
+    else{
+        mvwprintw(mframe,5,2,"Producto no encontrado");
+        wgetch(mframe);
+    }
+
+    noecho();
+    wattroff(mframe,A_REVERSE);
+    wrefresh(mframe);
+    return;
+}
+
+void eliminarCatalogo(char nombreProd[100],char usuario[100]){
+    char aux[100], aEliminar[100];
+    FILE * us;
+    FILE * destino;
+    us = fopen("catalogo","r");
+    destino = fopen("auxiliar","a+");
+
+    while(fscanf(us,"%s",aux) != EOF){
+        if(strcmp(aux,nombreProd) != 0){
+            fprintf(destino,"%s ",aux);
+        }
+        else{
+            for(int i = 0; i<3; i++){
+                fscanf(us,"%s",aux);
+            }
+        }
+    }
+    fclose(us);
+    strcat(aEliminar,".txt");
+    remove(aEliminar);
+    rename("auxiliar","catalogo");
+    fclose(destino);
     return;
 }
 
@@ -509,6 +631,7 @@ void cerrarSesion(){
     wattroff(mframe,A_REVERSE);
     wrefresh(mframe);
     sesion = 0;
+    strcpy(usuActual,"");
     return;
 }
 
@@ -535,6 +658,7 @@ void detallesCuenta(){
             wmove(mframe,2,2);
             mvwprintw(mframe, 2,2,"Tecla --> para confirmar");
             mvwprintw(mframe, 3,2,"Tecla <-- para regresar");
+            mvwprintw(mframe,1,2,"Hola %s",usuActual);
         
             for(int i = 0; i<2 ;i++){
 
@@ -610,9 +734,6 @@ void cambiarNombre(){
         wgetch(mframe);
     }
 
-
-
-    
     noecho();
     wattroff(mframe,A_REVERSE);
     wrefresh(mframe);
@@ -698,7 +819,6 @@ void msgActualmenteIniciado(){
             return;
 }
 
-
 int existeUsu(char nombre[100]){
     FILE * usuario;
     if(usuario = fopen(nombre,"r")){
@@ -724,6 +844,7 @@ void msgNoExisteUsuario(){
 }
 
 int codigoValido(char nombre[100],char codigo[100]){
+
     char aux[100],aux2[100];
     FILE * usuario;
     usuario = fopen(nombre,"r");
@@ -734,4 +855,17 @@ int codigoValido(char nombre[100],char codigo[100]){
     }
     else
         return 0;
+}
+
+int estaEnTxt(char txt[100], char palabra[100]){
+
+    char aux[100];
+    FILE * usuario;
+    usuario = fopen(txt,"r");
+    while(fscanf(usuario,"%s",aux) != EOF){
+        if(strcmp(aux,palabra) == 0){
+            return 1;
+        }
+    }
+    return 0;
 }
