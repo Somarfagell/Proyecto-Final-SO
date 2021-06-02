@@ -1,0 +1,2 @@
+//Aqui se guardarán los usuarios que tengan sesion abierta, cuando se abra un programa se comprobará que el nombre de usuario 
+que se quiera acceder no este aquí para iniciar sesion, en caso de que lo esté dirá que ya existe una sesion iniciada.

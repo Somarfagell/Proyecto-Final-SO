@@ -195,7 +195,6 @@ void carrito(){
     return;
 }
 
-
 //Insertar opcion que pueda hacer dispplay de la info de todos los productos
 void catalogo(){
     int opcion,producto;
@@ -365,7 +364,7 @@ void cuenta(){
 }
 
 void crearCuenta(){
-    char nombre[100], clave[100];
+    char nombre[200], clave[200];
     echo();
     wclear(mframe);
     box(mframe,0,0);
@@ -375,13 +374,13 @@ void crearCuenta(){
     mvwprintw(mframe,2,2,"Introduzca un nombre de usuario: ");
     wmove(mframe,2,40);
     wrefresh(mframe);
-    wscanw(mframe,"%s",&nombre);
+    wscanw(mframe,"%s",nombre);
 
     noecho();
     mvwprintw(mframe,3,2,"Introduzca una clave: ");
     wmove(mframe,3,40);
     wrefresh(mframe);
-    wscanw(mframe,"%s",&clave);
+    wscanw(mframe,"%s",clave);
 
     //Creando txt con todos los datos del usuario
     
