@@ -5,7 +5,7 @@
 void cuenta();
 void catalogo();
 void carrito();
-void imprimeTxt();
+void imprimeTxt(char[100]);
 void iniciarSesion();
 void soyProveedor();
 void cerrarSesion();
@@ -25,12 +25,18 @@ void agregarCatalogo(char [100],char [100],int);
 void eliminarCatalogo(char [100],char [100]);
 void eliminarProducto();
 int estaEnTxt(char [100], char [100]);
+char* obtenPrecio(int );
+char* obtenProveedor(int );
+char* obtenNombre(int );
 
 
 
 WINDOW *mframe;
 int y_max,x_max, sesion = 0;
 char usuActual[100];
+char obpre[100];
+char obnom[100];
+char obprov[100];
 //Nota: crear variables compartidas para hacer uso de semaforos
 
 //Checar funciones
@@ -155,7 +161,10 @@ void carrito(){
             mvwprintw(mframe,2,20,"Hola %s", usuario);
             mvwprintw(mframe,y_max-4,4,"<- para regresar ||  -> para pagar", usuario);
             mvwprintw(mframe,4,2,"Articulos en el carrito:");
-            //Buscar al usuario e imprimir su txt insertar aqui funcion
+            char carritoUsuario[200];
+            strcpy(carritoUsuario,usuario);
+            strcat(carritoUsuario,"_carrito");
+            imprimeTxt(carritoUsuario);
 
             wrefresh(mframe);
             tecla = wgetch(mframe);
@@ -166,10 +175,14 @@ void carrito(){
             else if(tecla == KEY_RIGHT){
                 wmove(mframe,7,2);
                 wattron(mframe, A_REVERSE);
-                mvwprintw(mframe, 7, 2, "ya esta todo pagadisimo :D          <- Menu || Seguir en carrito ->");
+                mvwprintw(mframe, 6, 2, "ya esta todo pagadisimo :D          <- Menu || Seguir en carrito ->");
                 wattroff(mframe, A_REVERSE);
                 wrefresh(mframe);
                 wgetch(mframe);
+                FILE *txt;
+                txt = fopen(carritoUsuario, "w+");
+                fprintf(txt," ");
+                fclose(txt);
             }
 
         }
@@ -198,7 +211,7 @@ void catalogo(){
         mvwprintw(mframe,4,2,"<- para regresar ||  -> para agregar a carrito");
         mvwprintw(mframe, 6, 2, "Num     Nombre             Proveedor               Precio");
         // funcion de impresion de datos imprimeTxt();
-        imprimeTxt();
+        imprimeTxt("catalogo");
         wrefresh(mframe);
 
         opcion = wgetch(mframe);
@@ -207,10 +220,24 @@ void catalogo(){
             return;
         else if(opcion == KEY_RIGHT){
             if(sesion == 1){
+                echo();
                 mvwprintw(mframe, 2, 35, "Introduzca el numero de producto:");
                 wrefresh(mframe);
-                wmove(mframe,2,50);
+                wmove(mframe,2,68);
                 wscanw(mframe,"%d",&producto);
+                noecho();
+                FILE * carrito;
+                char carritoUsuario[100], txt_precio[100],txt_nombre[100], txt_proveedor[100];
+                strcpy(carritoUsuario,usuActual);
+                strcat(carritoUsuario,"_carrito");
+                carrito = fopen(carritoUsuario,"a+");
+                
+                strcpy(txt_precio,obtenPrecio(producto));
+                strcpy(txt_nombre,obtenNombre(producto));
+                strcpy(txt_proveedor,obtenProveedor(producto));
+
+                fprintf(carrito,"%s %s %s ",txt_nombre,txt_proveedor,txt_precio);
+                fclose(carrito);
 
                 mvwprintw(mframe, 3, 35, "Producto agregado con exito");
                 wrefresh(mframe);
@@ -225,7 +252,47 @@ void catalogo(){
         }
         wgetch(mframe);  
     }
+}
 
+char* obtenPrecio(int pos){
+    FILE *txt;
+    int i = (pos*3)+3;
+    txt = fopen("catalogo", "r");
+    
+    while(i!=0){
+        fscanf(txt,"%s",obpre);
+        i-=1;
+    }
+    
+    fclose(txt);
+    return obpre;
+}
+
+char* obtenNombre(int pos){
+    FILE *txt;
+    int i = pos*3;
+    txt = fopen("catalogo", "r");
+    
+    while(i>=0){
+        fscanf(txt,"%s",obnom);
+        i-=1;
+    }
+    
+    fclose(txt);
+    return obnom;
+}
+
+char* obtenProveedor(int pos){
+    FILE *txt;
+    int i = (pos*3)+1;
+    txt = fopen("catalogo", "r");
+    
+    while(i>=0){
+        fscanf(txt,"%s",obprov);
+        i-=1;
+    }
+    fclose(txt);
+    return obprov;
 }
 
 void cuenta(){
@@ -323,18 +390,19 @@ void crearCuenta(){
     fprintf(usuario,"%s ",nombre);
     fprintf(usuario,"%s \n",clave);
     fclose(usuario);
-
-    FILE * carrito;
-    strcat(nombre,"_carrito");
-    carrito = fopen(nombre,"w");
-    fclose(carrito);
-
     wattron(mframe,A_REVERSE);
     mvwprintw(mframe,8,x_max/2-20,"Usuario creado correctamente, Hola %s", nombre);
     wrefresh(mframe);
     wgetch(mframe);
     wattroff(mframe,A_REVERSE);
     noecho();
+
+    FILE * carrito;
+    strcat(nombre,"_carrito");
+    carrito = fopen(nombre,"w");
+    fclose(carrito);
+
+    
     wrefresh(mframe);
     
     //else mvwprintw(mframe,8,x_max/2-10,"Usuario/Contraseña incorrectos");
@@ -342,11 +410,11 @@ void crearCuenta(){
     return;
 }
 
-void imprimeTxt(){
+void imprimeTxt(char archivo[100]){
     FILE *txt;
     char nombre[100],proveedor[100],precio[100];
     int i = 0, j = 0, total = 8;
-    txt = fopen("catalogo", "r");
+    txt = fopen(archivo, "r");
     
     while(fscanf(txt,"%s",nombre) != EOF){
 
