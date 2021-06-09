@@ -59,6 +59,15 @@ int main(){
     noecho();
     curs_set(0);
 
+    //Creando archivos de catalogo y activos necesarios
+    FILE * usuario;
+    usuario = fopen("catalogo","w");
+    fclose(usuario);
+
+    usuario = fopen("activos","w");
+    fclose(usuario);
+
+
     //Obteniendo datos para el tamaño de ventana
     
     getmaxyx(stdscr,y_max, x_max);
